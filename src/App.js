@@ -1,5 +1,5 @@
 import React from 'react';
-import ScannerForm from './Form';
+import ScannerForm from './Form/Form.formik';
 
 export default class App extends React.Component {
   render() {
