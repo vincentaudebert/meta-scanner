@@ -3,7 +3,7 @@ import InnerForm from './Form';
 import cheerio from 'cheerio';
 
 const mapPropsToValues = props => ({
-  urls: 'http://google.fr\nhttp://bing.fr\nhttp://yahoo.fr'
+  urls: 'https://google.fr\nhttps://bing.fr\nhttps://yahoo.fr'
 });
 const validate = (values, props) => {
   const errors = {};
