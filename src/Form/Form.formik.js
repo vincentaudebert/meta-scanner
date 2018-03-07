@@ -1,13 +1,33 @@
 import { withFormik } from 'formik';
 import InnerForm from './Form';
+import cheerio from 'cheerio';
 
-const mapPropsToValues = props => ({ email: '', password: '' });
+const mapPropsToValues = props => ({
+  urls: 'http://google.fr\nhttp://bing.fr\nhttp://yahoo.fr'
+});
 const validate = (values, props) => {
   const errors = {};
-  if (!values.urls) {
-    errors.urls = 'Required';
+
+  const { urls } = values;
+  if (!urls) {
+    if (!errors.urls) errors.urls = [];
+    errors.urls.push('Field is required');
   }
+  const splitUrls = urls.split('\n');
+  const urlRegex = /^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$/;
+  splitUrls.forEach(url => {
+    if (url !== '' && !urlRegex.test(url)) {
+      if (!errors.urls) errors.urls = [];
+      errors.urls.push(`Invalid URL: ${url}`);
+    }
+  });
   return errors;
+};
+
+const getUrlPromise = url => {
+  return fetch(url, {
+    method: 'get'
+  });
 };
 
 const handleSubmit = (
@@ -18,33 +38,44 @@ const handleSubmit = (
     setErrors /* setValues, setStatus, and other goodies */
   }
 ) => {
+  const { app } = props;
   const { urls } = values;
-  console.log(urls);
   setSubmitting(false);
-  // fetch(url, {
-  //   method: 'get'
-  // })
-  //   .then(response => {
-  //     if (response.ok) {
-  //       response.text().then(html => {
-  //         const $ = cheerio.load(html);
-  //         const title = $('head > title').text();
-  //         const description = $('head > meta[name="description"]').attr(
-  //           'content'
-  //         );
-  //         const favicon = $('head > link[rel="shortcut icon"]').attr('href');
-  //         console.log(title, description);
-  //         console.log(favicon);
-  //       });
-  //     } else {
-  //       console.log('Mauvaise réponse du réseau');
-  //     }
-  //   })
-  //   .catch(function(error) {
-  //     console.log(
-  //       "Il y a eu un problème avec l'opération fetch: " + error.message
-  //     );
-  //   });
+  app.newSubmission();
+  const splitUrls = urls.split('\n');
+  splitUrls.forEach(url => {
+    app.addToLastSubmission(url);
+    app.addToResults(url);
+    const urlPromise = getUrlPromise(url);
+    urlPromise
+      .then(response => {
+        if (response.ok) {
+          response.text().then(html => {
+            const $ = cheerio.load(html);
+            const title = $('head > title').text();
+            const description = $('head > meta[name="description"]').attr(
+              'content'
+            );
+            const favicon = $('head > link[rel="shortcut icon"]').attr('href');
+            const metadata = {
+              title,
+              description,
+              favicon
+            };
+            app.updateResult(url, metadata);
+          });
+        } else {
+          app.updateResult(url, undefined, 'Bad network response');
+        }
+      })
+      .catch(error => {
+        app.updateResult(
+          url,
+          undefined,
+          `An error occurred while fetching ${error.message}`
+        );
+      });
+  });
 };
 
 // Wrap our form with the using withFormik HoC
