@@ -20,15 +20,18 @@ export const Results = props => {
               if (foundResult) {
                 if (foundResult.loading)
                   return (
-                    <div key={`result-${next()}`}>
+                    <div key={`result-${next()}`} className="u-margin-bottom-s">
                       Loading {submittedUrl}...
                     </div>
                   );
+                if (foundResult.error !== '')
+                  return (
+                    <div key={`result-${next()}`} className="u-margin-bottom-s">
+                      Error for {submittedUrl}: {foundResult.error}
+                    </div>
+                  );
                 return (
-                  <div
-                    key={`result-${next()}`}
-                    style={{ marginBottom: '10px' }}
-                  >
+                  <div key={`result-${next()}`} className="u-margin-bottom-s">
                     <div>Url: {foundResult.url}</div>
                     <div>Title: {foundResult.data.title}</div>
                     <div>Description: {foundResult.data.description}</div>
