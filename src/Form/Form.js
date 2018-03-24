@@ -28,7 +28,11 @@ const InnerForm = ({
           errors.urls.map(errorUrl => <div key={next()}>{errorUrl}</div>)}
       </div>
       <div>
-        <button className="btn" type="submit" disabled={isSubmitting}>
+        <button
+          className="btn btn--green"
+          type="submit"
+          disabled={isSubmitting}
+        >
           Submit
         </button>
       </div>

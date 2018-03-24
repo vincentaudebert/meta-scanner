@@ -1,9 +1,10 @@
 import { withFormik } from 'formik';
 import InnerForm from './Form';
 import cheerio from 'cheerio';
+import { extractRootUrl } from './utils';
 
 const mapPropsToValues = props => ({
-  urls: 'https://google.fr\nhttps://bing.fr\nhttps://yahoo.fr'
+  urls: 'https://www.google.fr\nhttps://vincentaudebert.github.io'
 });
 const validate = (values, props) => {
   const errors = {};
@@ -53,10 +54,22 @@ const handleSubmit = (
           response.text().then(html => {
             const $ = cheerio.load(html);
             const title = $('head > title').text();
-            const description = $('head > meta[name="description"]').attr(
+
+            let description = $('head > meta[name="description"]').attr(
               'content'
             );
-            const favicon = $('head > link[rel="shortcut icon"]').attr('href');
+            if (!description) {
+              description = $('head > meta[property="og:description"]').attr(
+                'content'
+              );
+            }
+
+            let favicon = $('head > link[rel="shortcut icon"]').attr('href');
+            if (favicon.indexOf('://') === -1) {
+              const rootUrl = extractRootUrl(url);
+              favicon = `${rootUrl}${favicon}`;
+            }
+
             const metadata = {
               title,
               description,
